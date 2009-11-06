@@ -1,3 +1,6 @@
 en-US:
-  tab_regional_exclusivity: "Regional Exclusivity"
-  tab_regional_exclusivity_desc: "Restrict the purchase of select items based on geographic location of customers"
+  tab_regional_exclusivity:       "Regional Exclusivity"
+  tab_regional_exclusivity_desc:  "Restrict the purchase of select items based on geographic location of customers"
+  protected_in_given_region:      "This product may not be sold or shipped to zip code "
+  availabile_in_given_region:     "This product is available in zip code "
+  invalid_zip_code:               "Please enter a 5-digit zip code"

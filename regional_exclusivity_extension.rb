@@ -5,66 +5,71 @@ class RegionalExclusivityExtension < Spree::Extension
   version "1.0"
   description "Restrict purchase of select products based on geographic location"
   url "http://timharvey.net/"
-
-  # Please use regional_exclusivity/config/routes.rb instead for extension routes.
-
-  # def self.require_gems(config)
-  #   config.gem "gemname-goes-here", :version => '1.2.3'
-  # end
+  
+  RADIUS                      = 100
+  CURRENT_SEASON_START_DATE   = Time.now.month < 10 ? Date.new( y=Time.now.year-1, m=10, d=1 ) : Date.new( y=Time.now.year, m=10, d=1 )
+  
+  def any_protection_conflicts?( orders, product, zipcode )
+    # Loop through all orders
+    orders.each do |order|
+      if order.within_protection_radius?( zipcode )
+        # check every line item
+        order.line_items.each do |line_item|
+          # If a line item matches the product under consideration, there is a conflict
+          return true if !line_item.variant.nil? && line_item.variant.product == product
+        end
+      end
+    end
+    false
+  end
   
   def activate
+    ProductsController.class_eval do
+      before_filter :setAvailabilityMessage, :only => :show
+      
+      def setAvailabilityMessage
+        return if params[:availableTo].nil?
+
+        zip_input = params[:availableTo]
+        @available = { :value => FALSE, :message => ''}
+        unless zip_input.to_i && zip_input.to_i.to_s.length == 5
+          @available[:message]  = t("invalid_zip_code")
+        else
+          if RegionalExclusivityExtension::any_protection_conflicts?( Order.current_season_orders, @product, params[:availableTo])
+            @available[:message]  = t("protected_in_given_region") + params[:availableTo] + '.'
+          else
+            @available[:message]  = t("availabile_in_given_region") + params[:availableTo] + '.'
+            @available[:value]    = true
+          end
+        end
+        @available
+      end
+    end
+    
     Product.class_eval do
       def regionally_protected?
         true
       end
       
-      def available_to?( zipcode )
-        # loop through variants
-        self.variants.each do |variant| 
-          # Find all the inventory units sold for the current variant
-          return false unless variant.available_to?( zipcode )
-        end
-        true
-      end
-    end
-      
-    Variant.class_eval do
-      def available_to?( zipcode )
-        # Loop through each variant sold
-        self.inventory_units.each do |inventory_unit| 
-          if inventory_unit.state == 'sold' || inventory_unit.state == 'shipped'
-            # Check the order date (to be sure it's within the protection range)
-            if inventory_unit.order.within_current_season?
-              # Check the distance to both the shipping and billing address?
-              return false unless inventory_unit.order.within_protection_radius?( zipcode )
-            end
-          end
-        end
-        true
-      end
+      def any_protection_conflicts?( zipcode )
+        RegionalExclusivityExtension::any_protection_conflicts?( Order.current_season_orders, self, zipcode )
+      end      
     end
     
     Order.class_eval do
+      named_scope :current_season_orders, :conditions => [ "created_at >= ?", RegionalExclusivityExtension::CURRENT_SEASON_START_DATE ]
+
       def within_current_season?
-        # If after October 10 of the current year
-        if Time.now.month < 10
-          # We are in Jan - Sept, so the season started the prev year
-          season_start = Date.new( y=Time.now.year-1, m=10, d=1 )
-        else
-          # We are in Oct - Dec, so the season started the current year
-          season_start = Date.new( y=Time.now.year, m=10, d=1 )
-        end
-        self.created_at >= season_start
+        self.created_at >= RegionalExclusivityExtension::CURRENT_SEASON_START_DATE
       end
       
       def within_protection_radius?( zipcode )
         zip = ZipCode.find_by_zip( zipcode )
-        unless zip.nil? then
-          p self.bill_address.distance_to( zip ) >= 100
-        else
-          true
-        end
+        # Gracefully handles a non-existent zipcode, returning false
+        return false if self.bill_address.nil? || zip.nil?
+        self.bill_address.distance_to( zip ) <= RegionalExclusivityExtension::RADIUS
       end
+      
     end
 
     Address.class_eval do
@@ -74,8 +79,10 @@ class RegionalExclusivityExtension < Spree::Extension
       protected
         def update_geocode
           zip = ZipCode.find_by_zip( self.zipcode )
-          self.lat = zip.latitude
-          self.lng = zip.longitude
+          unless zip.nil?
+            self.lat = zip.latitude
+            self.lng = zip.longitude
+          end
         end
     end
 
