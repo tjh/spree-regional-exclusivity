@@ -9,6 +9,20 @@ To change the radius or date range for protection, edit these values in 'regiona
     RADIUS                      = 100
     CURRENT_SEASON_START_DATE   = Date.new( y=Time.now.year, m=1, d=1 )
 
+= Zip Data
+
+Distance calculations rely on zip code lat/lng data and the GeoKit plugin/gem. To load GeoKit:
+
+    script/plugin install git://github.com/andre/geokit-rails.git
+
+The zip data is in a zips.txt. It's not the most up to date, but it's freely available and will get you close (unless you want exclusivity that's within a few miles). Put the 'regional_exclusivity/db/zips.txt' file into you Spree 'db' folder, then run:
+
+    rake db:zip_load
+
+If you have existing orders, after running the migrations, run this rake task to update each with the necessary lat/lng data:
+
+    rake db:zip_info_update
+
 = Views
 
 This does require some customization of the views to handle the display of the regional protection lookup. I specifically blocked display of the 'add to cart' button unless the check has been passed.
