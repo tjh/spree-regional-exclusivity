@@ -69,6 +69,7 @@ describe Order do
   end
   
   it "should find protection conflicts when an order has the product as a matching line item" do
+    ZipCode.create!( :zip => 46741 )
     bill_address = double('bill_address')
     bill_address.stub(:distance_to).and_return( 0 )
     @order.bill_address = bill_address
@@ -76,5 +77,16 @@ describe Order do
     @orders << @order
     RegionalExclusivityExtension::any_protection_conflicts?( @orders, @product, 46741 ).should == true  
   end
+
+  it "should find protection conflicts when checking a bogus zip code" do
+    ZipCode.create!( :zip => 46741 )
+    bill_address = double('bill_address')
+    bill_address.stub(:distance_to).and_return( 0 )
+    @order.bill_address = bill_address
+    @order.add_variant(@product.master)
+    @orders << @order
+    RegionalExclusivityExtension::any_protection_conflicts?( @orders, @product, 00000 ).should == true  
+  end
+
   
 end
