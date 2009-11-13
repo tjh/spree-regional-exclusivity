@@ -30,11 +30,11 @@ class RegionalExclusivityExtension < Spree::Extension
       def setAvailabilityMessage
         return if params[:availableTo].nil?
 
-        zip_input = params[:availableTo]
+        zip_input = params[:availableTo].strip
         @available = { :value => FALSE, :message => ''}
         
         # See if what the user provided is a valid (not expired) bypass code
-        if RegExBypassCode.validate params[:availableTo]
+        if RegExBypassCode.validate(zip_input).count > 0
           @available[:message]  = t("protection_bypassed")
           @available[:value]    = true
         else
@@ -42,10 +42,10 @@ class RegionalExclusivityExtension < Spree::Extension
           unless zip_input.to_i && zip_input.to_i.to_s.length == 5
             @available[:message]  = t("invalid_zip_code")
           else
-            if RegionalExclusivityExtension::any_protection_conflicts?( Order.current_season_orders, @product, params[:availableTo])
-              @available[:message]  = t("protected_in_given_region") + params[:availableTo] + '.'
+            if RegionalExclusivityExtension::any_protection_conflicts?( Order.current_season_orders, @product, zip_input)
+              @available[:message]  = t("protected_in_given_region") + zip_input + '.'
             else
-              @available[:message]  = t("availabile_in_given_region") + params[:availableTo] + '.'
+              @available[:message]  = t("availabile_in_given_region") + zip_input + '.'
               @available[:value]    = true
             end
           end

@@ -2,7 +2,7 @@ class RegExBypassCode < ActiveRecord::Base
   require "digest"
   default_scope :conditions => ["expiration >= :now", { :now => Time.now }]
   named_scope :stale_codes, :conditions => ["expiration < :now", { :now => Time.now }]
-  named_scope :validate, lambda { |code| { :conditions => "code = '#{code} AND expiration < #{Time.now}" } }
+  named_scope :validate, lambda { |code| { :conditions => "code = '#{code}' AND expiration < '#{Time.now.to_s}'" } }
   before_save :verify_record
     
   def self.purge_stale_codes
