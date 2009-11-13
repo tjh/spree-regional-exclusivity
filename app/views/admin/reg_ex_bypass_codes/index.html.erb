@@ -1,0 +1,27 @@
+<div class='toolbar'>
+    <ul class='actions'>
+      <li id="new_ot_link">
+        <%= content_tag(:a, text_for_button_link(t('add_bypass_code'), :icon => 'add'), html_options_for_button_link( {:href => new_object_url, :id => 'new_bypass_code'} ) ) %>
+      </li> 
+    </ul>
+  <br class='clear' />
+</div>
+<h1><%= t('admin_bypass_codes_header') %></h1>
+<table class="index">
+  <thead>
+    <th><%= t('label_bypass_code') %></td>
+    <th><%= t('label_expiration') %></td>
+    <th>&nbsp;</th>
+  </tr>
+  <thead>
+<% @reg_ex_bypass_codes.each do |reg_ex_bypass_code| %>
+  <tr id="<%= dom_id reg_ex_bypass_code %>">
+    <td><%= h reg_ex_bypass_code.code %></td>
+    <td><%= reg_ex_bypass_code.expiration.to_s :long %></td>
+    <td class="actions">
+      <%= link_to icon("delete") + ' ' + t("delete"), admin_reg_ex_bypass_code_path(reg_ex_bypass_code), :confirm => 'Confirm deletion?', :method => :delete, :id => "delete_#{dom_id(reg_ex_bypass_code)}" %>
+    </td>
+  </tr>
+<% end %> 
+  </tbody>
+</table>

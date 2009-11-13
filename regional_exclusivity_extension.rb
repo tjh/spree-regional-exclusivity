@@ -32,14 +32,22 @@ class RegionalExclusivityExtension < Spree::Extension
 
         zip_input = params[:availableTo]
         @available = { :value => FALSE, :message => ''}
-        unless zip_input.to_i && zip_input.to_i.to_s.length == 5
-          @available[:message]  = t("invalid_zip_code")
+        
+        # See if what the user provided is a valid (not expired) bypass code
+        if RegExBypassCode.validate params[:availableTo]
+          @available[:message]  = t("protection_bypassed")
+          @available[:value]    = true
         else
-          if RegionalExclusivityExtension::any_protection_conflicts?( Order.current_season_orders, @product, params[:availableTo])
-            @available[:message]  = t("protected_in_given_region") + params[:availableTo] + '.'
+          # Now see if their zip works
+          unless zip_input.to_i && zip_input.to_i.to_s.length == 5
+            @available[:message]  = t("invalid_zip_code")
           else
-            @available[:message]  = t("availabile_in_given_region") + params[:availableTo] + '.'
-            @available[:value]    = true
+            if RegionalExclusivityExtension::any_protection_conflicts?( Order.current_season_orders, @product, params[:availableTo])
+              @available[:message]  = t("protected_in_given_region") + params[:availableTo] + '.'
+            else
+              @available[:message]  = t("availabile_in_given_region") + params[:availableTo] + '.'
+              @available[:value]    = true
+            end
           end
         end
         @available
@@ -85,11 +93,11 @@ class RegionalExclusivityExtension < Spree::Extension
         end
     end
 
-    Admin::BaseController.class_eval do
-      before_filter :add_product_regional_ex_tab
+    Admin::ConfigurationsController.class_eval do
+      before_filter :add_reg_ex_bypass_codes_link, :only => :index
 
-      def add_product_regional_ex_tab
-        @product_admin_tabs << {:name => t("tab_product_regional_ex"), :url => "admin_product_view_regional_ex"}
+      def add_reg_ex_bypass_codes_link
+        @extension_links << {:link => admin_reg_ex_bypass_codes_path, :link_text => t('tab_reg_ex_bypass_codes'), :description => t('tab_reg_ex_bypass_codes_desc')}
       end
     end
 
