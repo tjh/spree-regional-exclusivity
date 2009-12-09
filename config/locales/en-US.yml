@@ -1,7 +1,7 @@
 en-US:
   tab_regional_exclusivity:       "Regional Exclusivity"
   tab_regional_exclusivity_desc:  "Restrict the purchase of select items based on geographic location of customers"
-  protected_in_given_region:      "This product may not be sold or shipped to zip code "
+  protected_in_given_region:      "This show is not currently available in your area. Please call 1-800-356-4381 for clearance and further information. Zip Code: "
   availabile_in_given_region:     "This product is available in zip code "
   invalid_zip_code:               "Please enter a 5-digit zip code"
   tab_reg_ex_bypass_codes:        "Bypass Codes"
