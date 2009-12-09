@@ -72,7 +72,7 @@ class RegionalExclusivityExtension < Spree::Extension
       end
       
       def within_protection_radius?( zipcode )
-        return false if self.bill_address.nil?
+        return false if self.bill_address.nil? or state == 'canceled' or state == 'in_progress'
         zip = ZipCode.find_by_zip( zipcode )
         zip.nil? || self.bill_address.distance_to( zip ) <= RegionalExclusivityExtension::RADIUS
       end
