@@ -39,7 +39,7 @@ class RegionalExclusivityExtension < Spree::Extension
           @available[:value]    = true
         else
           # Now see if their zip works
-          unless zip_input.to_i && zip_input.to_i.to_s.length == 5
+          unless zip_input.to_i && zip_input =~ /^\d{5}$/
             @available[:message]  = t("invalid_zip_code")
           else
             if RegionalExclusivityExtension::any_protection_conflicts?( Order.current_season_orders, @product, zip_input)
